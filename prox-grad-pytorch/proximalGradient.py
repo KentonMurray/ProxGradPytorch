@@ -167,7 +167,6 @@ def l1(parameter, bias=None, reg=0.01, lr=0.1):
     #print("update_w:", update_w)
     parameter.data = update_w
 
-    #TODO: Update bias
     if bias is not None:
         if bias.is_cuda:
             Norms_b = Norm*torch.ones(bias.size(), device=torch.device("cuda"))
@@ -180,4 +179,52 @@ def l1(parameter, bias=None, reg=0.01, lr=0.1):
         update_b = bias - pos + neg
         #print("update_b:", update_b)
         bias.data = update_b
+
+def elasticnet(parameter, bias=None, reg=0.01, lr=0.1, gamma=1.0):
+    """Elastic Net Regularization using Proximal Gradients.
+    This is a linear combination of an l1 and a quadratic penalty."""
+    if gamma < 0.0:
+        print("Warning, gamma should be positive. Otherwise you are not shrinking.")
+    #TODO: Is gamma of 1.0 a good value?
+    Norm = reg*lr*gamma
+    #print("parameter:", parameter)
+    l1(parameter, bias, reg, lr)
+    #print("parameter:", parameter)
+    update_w = (1.0/(1.0 + Norm))*parameter
+    parameter.data = update_w
+    if bias is not None:
+        update_b = (1.0/(1.0 + Norm))*bias
+        bias.data = update_b
+
+def logbarrier(parameter, bias=None, reg=0.01, lr=0.1):
+    """Project onto logbarrier. Useful for minimization
+    of f(x) when x >= b.
+    F(A) = -log(det(A))"""
+    #TODO: Verify this is correct
+    Norm = reg*lr
+
+    # Update W
+    squared = torch.mul(parameter, parameter)
+    #print("squared:", squared)
+    squared = squared + 4*Norm
+    #print("squared:", squared)
+    squareroot = torch.sqrt(squared)
+    #print("squareroot:", squareroot)
+    update_w = (parameter + squareroot)/2.0
+    #print("parameter:", parameter)
+    #print("update_w:", update_w)
+    parameter.data = update_w
+
+    if bias is not None:
+        squared = torch.mul(bias, bias)
+        #print("squared:", squared)
+        squared = squared + 4*Norm
+        #print("squared:", squared)
+        squareroot = torch.sqrt(squared)
+        #print("squareroot:", squareroot)
+        update_b = (bias + squareroot)/2.0
+        #print("bias:", bias)
+        #print("update_b:", update_b)
+        bias.data = update_b
+
 
