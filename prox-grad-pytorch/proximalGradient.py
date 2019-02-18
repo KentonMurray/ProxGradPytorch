@@ -66,7 +66,6 @@ def l21(parameter, bias=None, reg=0.01, lr=0.1):
     """L21 Regularization"""
 #    print("parameter")
     
-#    w_and_b = torch.cat((parameter.weight, parameter.bias.unfold(0,1,1)),1) #TODO:
     if bias is not None:
         w_and_b = torch.cat((parameter, bias.unfold(0,1,1)),1)
     else:
@@ -97,4 +96,88 @@ def l21(parameter, bias=None, reg=0.01, lr=0.1):
         update_b = (bias*l21T)
         bias.data = update_b
         #print("bias2:", bias)
+
+def linf1(parameter, bias=None, reg=0.01, lr=0.1):
+    """Linfity1 Regularization using Proximal Gradients"""
+#    print("parameter")
+    
+    if bias is not None:
+        w_and_b = torch.cat((parameter, bias.unfold(0,1,1)),1)
+    else:
+        w_and_b = parameter
+    Linf1 = reg # lambda: regularization strength
+    print("w_and_b:", w_and_b)
+    sorted, indices = torch.sort(w_and_b)
+    maximum = torch.max(w_and_b)
+    print("maximum:", maximum)
+    print("sorted:", sorted)
+    print("indices:", indices)
+    #TODO: Norm (sort?)
+#    Norm = (lr*L2/w_and_b.norm(2))
+    if Norm.is_cuda:
+        ones_w = torch.ones(parameter.size(), device=torch.device("cuda"))
+    else:
+        ones_w = torch.ones(parameter.size(), device=torch.device("cpu"))
+
+
+def l2(parameter, bias=None, reg=0.01, lr=0.1):
+    """L2 Regularization over the entire parameter's values using proximal gradients"""
+#    print("parameter")
+    
+    if bias is not None:
+        w_and_b = torch.cat((parameter, bias.unfold(0,1,1)),1)
+    else:
+        w_and_b = parameter
+    #print("w_and_b:", w_and_b)
+    L2 = reg # lambda: regularization strength
+    Norm = (lr*L2/w_and_b.norm(2))
+    if Norm.is_cuda:
+        ones_w = torch.ones(parameter.size(), device=torch.device("cuda"))
+    else:
+        ones_w = torch.ones(parameter.size(), device=torch.device("cpu"))
+    #print("Norm.device", Norm.device)
+    #print("ones.device", ones.device)
+    l2T = 1.0 - torch.min(ones_w, Norm)
+    update = (parameter*l2T) #TODO: Figure out unsqueeze
+    parameter.data = update
+    # Update bias
+    if bias is not None:
+        if Norm.is_cuda:
+            ones_b = torch.ones(bias.size(), device=torch.device("cuda"))
+        else:
+            ones_b = torch.ones(bias.size(), device=torch.device("cpu"))
+        l2T = 1.0 - torch.min(ones_b, bias)
+        update_b = (bias*l2T)
+        bias.data = update_b
+
+def l1(parameter, bias=None, reg=0.01, lr=0.1):
+    """L1 Regularization using Proximal Gradients"""
+    Norm = reg*lr
+
+    # Update W
+    if parameter.is_cuda:
+        Norms_w = Norm*torch.ones(parameter.size(), device=torch.device("cuda"))
+    else:
+        Norms_w = Norm*torch.ones(parameter.size(), device=torch.device("cpu"))
+    pos = torch.min(Norms_w, Norm*torch.clamp(parameter, min=0))
+    neg = torch.min(Norms_w, -1.0*Norm*torch.clamp(parameter, max=0))
+    #print("pos:", pos)
+    #print("neg:", neg)
+    update_w = parameter - pos + neg
+    #print("update_w:", update_w)
+    parameter.data = update_w
+
+    #TODO: Update bias
+    if bias is not None:
+        if bias.is_cuda:
+            Norms_b = Norm*torch.ones(bias.size(), device=torch.device("cuda"))
+        else:
+            Norms_b = Norm*torch.ones(bias.size(), device=torch.device("cpu"))
+        pos = torch.min(Norms_b, Norm*torch.clamp(bias, min=0))
+        neg = torch.min(Norms_b, -1.0*Norm*torch.clamp(bias, max=0))
+        #print("pos:", pos)
+        #print("neg:", neg)
+        update_b = bias - pos + neg
+        #print("update_b:", update_b)
+        bias.data = update_b
 
