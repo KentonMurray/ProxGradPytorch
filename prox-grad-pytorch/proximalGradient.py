@@ -104,6 +104,7 @@ def linf1(parameter, bias=None, reg=0.01, lr=0.1):
     
     Norm = reg*lr
     #Norm = 1.0 # TODO: Just for testing
+    #Norm = 0.1 # TODO: Just for testing
     if bias is not None:
         w_and_b = torch.cat((parameter, bias.unfold(0,1,1)),1)
     else:
@@ -121,7 +122,7 @@ def linf1(parameter, bias=None, reg=0.01, lr=0.1):
 
     sorted_z = torch.cat((sorted_w_and_b, torch.zeros(rows,1)),1)
     print("sorted_z:", sorted_z[:,1:])
-    subtracted = sorted_w_and_b - sorted_z[:,1:]
+    subtracted = torch.clamp(sorted_w_and_b - sorted_z[:,1:],max=Norm) #Max=Norm important
     print("subtracted:", subtracted)
 
     scale_indices = torch.cumsum(torch.ones(rows,cols),1)
@@ -132,7 +133,6 @@ def linf1(parameter, bias=None, reg=0.01, lr=0.1):
     print("max_mass:", max_mass)
     print(max_mass - Norm)
     nonzero = torch.clamp(-1*(max_mass - Norm),0)
-    nonzero2 = torch.clamp((max_mass - Norm),0)
     print("NZ:", nonzero)
 
     oneN = 1.0/scale_indices
@@ -148,7 +148,11 @@ def linf1(parameter, bias=None, reg=0.01, lr=0.1):
     print("max_remain:", max_remain)
     shift_max = torch.cat((torch.zeros(rows,1),max_remain[:,:(cols-1)]),1)
     print("shift_max:", shift_max)
-    tosub = nonzero_ones * subtracted + shift_max * oneN
+    print(subtracted)
+    print(nonzero_ones)
+    first_col_nonzero_ones = torch.cat((torch.ones(rows,1),nonzero_ones[:,1:]),1) #Edge case for only first column
+    print("GRRR:", first_col_nonzero_ones * subtracted)
+    tosub = first_col_nonzero_ones * subtracted + shift_max * oneN
     print("tosub:", tosub)
 
     nastyflipS = torch.flip(torch.flip(tosub,[0,1]),[0]) #TODO: Edge cases
