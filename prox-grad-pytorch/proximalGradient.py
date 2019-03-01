@@ -101,7 +101,7 @@ def l21(parameter, bias=None, reg=0.01, lr=0.1):
 def linf1(parameter, bias=None, reg=0.01, lr=0.1):
     """Linfity1 Regularization using Proximal Gradients"""
 #    print("parameter")
-    
+
     Norm = reg*lr
     #Norm = 1.0 # TODO: Just for testing
     #Norm = 0.1 # TODO: Just for testing
@@ -109,81 +109,91 @@ def linf1(parameter, bias=None, reg=0.01, lr=0.1):
         w_and_b = torch.cat((parameter, bias.unfold(0,1,1)),1)
     else:
         w_and_b = parameter
-    print("w_and_b:", w_and_b)
+    #print("w_and_b:", w_and_b)
     sorted_w_and_b, indices = torch.sort(torch.abs(w_and_b), descending=True)
-    print("sorted_w_and_b:", sorted_w_and_b)
-    print("indices:", indices)
-    #print(torch.einsum('ij->i', [sorted_w_and_b]))
-    #print("topk:", torch.topk(sorted_w_and_b, 3))
+    #print("sorted_w_and_b:", sorted_w_and_b)
+    #print("indices:", indices)
+    ##print(torch.einsum('ij->i', [sorted_w_and_b]))
+    ##print("topk:", torch.topk(sorted_w_and_b, 3))
+
+    # CUDA or CPU
+    devicetype="cuda"
+    if w_and_b.is_cuda:
+    #    ones_w = torch.ones(parameter.size(), device=torch.device("cuda"))
+        devicetype="cuda"
+    else:
+    #    ones_w = torch.ones(parameter.size(), device=torch.device("cpu"))
+        devicetype="cpu"
+
 
     #SLOW
     rows, cols = sorted_w_and_b.size()
-    print("rows, cols", rows, cols)
+    #print("rows, cols", rows, cols)
 
-    sorted_z = torch.cat((sorted_w_and_b, torch.zeros(rows,1)),1)
-    print("sorted_z:", sorted_z[:,1:])
+    sorted_z = torch.cat((sorted_w_and_b, torch.zeros(rows,1, device=torch.device(devicetype))),1)
+    #print("sorted_z:", sorted_z[:,1:])
     subtracted = torch.clamp(sorted_w_and_b - sorted_z[:,1:],max=Norm) #Max=Norm important
-    print("subtracted:", subtracted)
+    #print("subtracted:", subtracted)
 
-    scale_indices = torch.cumsum(torch.ones(rows,cols),1)
-    print(scale_indices)
+    scale_indices = torch.cumsum(torch.ones(rows,cols, device=torch.device(devicetype)),1)
+    #print(scale_indices)
     scaled_subtracted = subtracted * scale_indices
-    print(scaled_subtracted)
+    #print(scaled_subtracted)
     max_mass = torch.cumsum(scaled_subtracted,1)
-    print("max_mass:", max_mass)
-    print(max_mass - Norm)
+    #print("max_mass:", max_mass)
+    #print(max_mass - Norm)
     nonzero = torch.clamp(-1*(max_mass - Norm),0)
-    print("NZ:", nonzero)
+    #print("NZ:", nonzero)
 
     oneN = 1.0/scale_indices
 
 
     nonzero_ones = torch.clamp(nonzero * 1000000, max=1) #TODO: Hacky
-    shifted_ones = torch.cat((torch.ones(rows,1),nonzero_ones[:,:(cols-1)]),1)
+    shifted_ones = torch.cat((torch.ones(rows,1, device=torch.device(devicetype)),nonzero_ones[:,:(cols-1)]),1)
     over_one = -1*(nonzero_ones - shifted_ones)
-    print("over_one:", over_one)
-    last_one = torch.cat((over_one,torch.zeros(rows,1)),1)[:,1:]
-    print("last_one:", last_one)
+    #print("over_one:", over_one)
+    last_one = torch.cat((over_one,torch.zeros(rows,1, device=torch.device(devicetype))),1)[:,1:]
+    #print("last_one:", last_one)
     max_remain = last_one * nonzero
-    print("max_remain:", max_remain)
-    shift_max = torch.cat((torch.zeros(rows,1),max_remain[:,:(cols-1)]),1)
-    print("shift_max:", shift_max)
-    print(subtracted)
-    print(nonzero_ones)
-    first_col_nonzero_ones = torch.cat((torch.ones(rows,1),nonzero_ones[:,1:]),1) #Edge case for only first column
-    print("GRRR:", first_col_nonzero_ones * subtracted)
+    #print("max_remain:", max_remain)
+    shift_max = torch.cat((torch.zeros(rows,1, device=torch.device(devicetype)),max_remain[:,:(cols-1)]),1)
+    #print("shift_max:", shift_max)
+    #print(subtracted)
+    #print(nonzero_ones)
+    first_col_nonzero_ones = torch.cat((torch.ones(rows,1, device=torch.device(devicetype)),nonzero_ones[:,1:]),1) #Edge case for only first column
+    #print("GRRR:", first_col_nonzero_ones * subtracted)
     tosub = first_col_nonzero_ones * subtracted + shift_max * oneN
-    print("tosub:", tosub)
+    #print("tosub:", tosub)
 
     nastyflipS = torch.flip(torch.flip(tosub,[0,1]),[0]) #TODO: Edge cases
-    print(nastyflipS)
+    #print(nastyflipS)
     aggsubS = torch.cumsum(nastyflipS,1)
-    print(aggsubS)
+    #print(aggsubS)
     nastyflipagainS = torch.flip(torch.flip(aggsubS,[0,1]),[0]) #TODO: Edge cases
-    print("NFAS:", nastyflipagainS)
+    #print("NFAS:", nastyflipagainS)
 
     updated_weights = sorted_w_and_b - nastyflipagainS
-    print("UPDATED WEIGHTS:", updated_weights)
-    print("w_and_b:", w_and_b)
-    print("indices:", indices)
+    #print("UPDATED WEIGHTS:", updated_weights)
+    #print("w_and_b:", w_and_b)
+    #print("indices:", indices)
     #_, reverse_indices = indices.sort()
     #print(reverse_indices)
     #print(_, reverse_indices = indices.sort())
     #print("w_and_b[indices]:", w_and_b[indices])
     #print(torch.zeros(rows,cols).scatter_(1,indices,w_and_b))
-    unsorted = torch.zeros(rows,cols).scatter_(1,indices,updated_weights)
-    print(unsorted)
-    print(torch.sign(w_and_b))
+    unsorted = torch.zeros(rows,cols, device=torch.device(devicetype)).scatter_(1,indices,updated_weights)
+    #print(unsorted)
+    #print(torch.sign(w_and_b))
     final_w_and_b = torch.sign(w_and_b) * unsorted
-    print("FINALLY:", final_w_and_b)
+    #print("FINALLY:", final_w_and_b)
 
     # Actually update parameters and bias
     if bias is not None:
         update = final_w_and_b[:,:cols-1]
-        print("update:", update)
+        #print("update:", update)
         parameter.data = update
         update_b = final_w_and_b[:,-1]
-        print("update_b:", update_b)
+        #print("update_b:", update_b)
         #print(bias.data)
         bias.data = update_b
         #print(bias.data)
