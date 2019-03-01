@@ -102,15 +102,14 @@ def linf1(parameter, bias=None, reg=0.01, lr=0.1):
     """Linfity1 Regularization using Proximal Gradients"""
 #    print("parameter")
     
-    #Norm = reg*lr
-    Norm = 1.0 # TODO: Just for testing
+    Norm = reg*lr
+    #Norm = 1.0 # TODO: Just for testing
     if bias is not None:
         w_and_b = torch.cat((parameter, bias.unfold(0,1,1)),1)
     else:
         w_and_b = parameter
     print("w_and_b:", w_and_b)
     sorted_w_and_b, indices = torch.sort(torch.abs(w_and_b), descending=True)
-    desorted_w_and_b, indices = torch.sort(torch.abs(w_and_b), descending=False)
     print("sorted_w_and_b:", sorted_w_and_b)
     print("indices:", indices)
     #print(torch.einsum('ij->i', [sorted_w_and_b]))
@@ -139,7 +138,7 @@ def linf1(parameter, bias=None, reg=0.01, lr=0.1):
     oneN = 1.0/scale_indices
 
 
-    nonzero_ones = torch.clamp(nonzero * 1000000, max=1)
+    nonzero_ones = torch.clamp(nonzero * 1000000, max=1) #TODO: Hacky
     shifted_ones = torch.cat((torch.ones(rows,1),nonzero_ones[:,:(cols-1)]),1)
     over_one = -1*(nonzero_ones - shifted_ones)
     print("over_one:", over_one)
@@ -161,6 +160,32 @@ def linf1(parameter, bias=None, reg=0.01, lr=0.1):
 
     updated_weights = sorted_w_and_b - nastyflipagainS
     print("UPDATED WEIGHTS:", updated_weights)
+    print("w_and_b:", w_and_b)
+    print("indices:", indices)
+    #_, reverse_indices = indices.sort()
+    #print(reverse_indices)
+    #print(_, reverse_indices = indices.sort())
+    #print("w_and_b[indices]:", w_and_b[indices])
+    #print(torch.zeros(rows,cols).scatter_(1,indices,w_and_b))
+    unsorted = torch.zeros(rows,cols).scatter_(1,indices,updated_weights)
+    print(unsorted)
+    print(torch.sign(w_and_b))
+    final_w_and_b = torch.sign(w_and_b) * unsorted
+    print("FINALLY:", final_w_and_b)
+
+    # Actually update parameters and bias
+    if bias is not None:
+        update = final_w_and_b[:,:cols-1]
+        print("update:", update)
+        parameter.data = update
+        update_b = final_w_and_b[:,-1]
+        print("update_b:", update_b)
+        #print(bias.data)
+        bias.data = update_b
+        #print(bias.data)
+    else:
+        parameter.data = final_w_and_b
+        
 
 
 
