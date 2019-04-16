@@ -49,8 +49,8 @@ criterion = torch.nn.MSELoss(size_average=False)
 #optimizer = torch.optim.SGD(model.parameters(), lr=1e-4)
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-1)
 #for t in range(500):
-for t in range(1000):
-#for t in range(10):
+#for t in range(1000):
+for t in range(10):
     # Forward pass: Compute predicted y by passing x to the model
     #y_pred, h_relu = model(x)
     y_pred = model(x)
@@ -102,7 +102,42 @@ for t in range(1000):
     #pg.l21(model.linear1, reg=0.1)
     #pg.l21_slow(model.linear1.weight, reg=0.1)
     #pg.l21(model.linear1.weight, reg=0.1)
-    pg.l21(model.linear1.weight, model.linear1.bias, reg=0.1) #TODO: Make test, test both of these
+    #pg.l21(model.linear1.weight, model.linear1.bias, reg=0.1) #TODO: Make test, test both of these
+    #print("weight after:", model.linear1.weight)
+    #print("bias after:", model.linear1.bias)
+
+    # Seeing about l2...
+    #print("L2:", model.linear1.weight.norm(2))
+    #print("weight before:", model.linear1.weight)
+    #pg.l2(model.linear1.weight, model.linear1.bias, reg=0.1)
+    #print("weight after:", model.linear1.weight)
+
+
+    #L1...
+    #print("weight before:", model.linear1.weight)
+    #pg.l1(model.linear1.weight, model.linear1.bias, reg=0.1)
+    #print("weight after:", model.linear1.weight)
+
+
+    #Linf1...
+    print("weight before:", model.linear1.weight)
+    print("bias before:", model.linear1.bias)
+    pg.linf1(model.linear1.weight, model.linear1.bias, reg=0.1)
     print("weight after:", model.linear1.weight)
     print("bias after:", model.linear1.bias)
+
+    #Linf
+    #print("weight before:", model.linear1.weight)
+    #pg.linf(model.linear1.weight, model.linear1.bias, reg=0.1)
+    #print("weight after:", model.linear1.weight)
+    
+    #Elastic Net
+    #print("weight before:", model.linear1.weight)
+    #pg.elasticnet(model.linear1.weight, model.linear1.bias, reg=0.1)
+    #print("weight after:", model.linear1.weight)
+ 
+    #Log Barrier...
+    #print("weight before:", model.linear1.weight)
+    #pg.logbarrier(model.linear1.weight, model.linear1.bias, reg=0.1)
+    #print("weight after:", model.linear1.weight)
 
