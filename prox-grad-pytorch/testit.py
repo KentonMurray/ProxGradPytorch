@@ -1,27 +1,19 @@
 import torch
 import proximalGradient as pg
 
-class TwoLayerNet(torch.nn.Module):
+class OneLayerNet(torch.nn.Module):
     def __init__(self, D_in, H, D_out):
         """
-        In the constructor we instantiate two nn.Linear modules and assign them as
-        member variables.
+        The constructor creates one linear layer and assigns it a name.
         """
-        super(TwoLayerNet, self).__init__()
-        #self.linear1 = torch.nn.Linear(D_in, H)
-        #self.linear2 = torch.nn.Linear(H, D_out)
+        super(OneLayerNet, self).__init__()
         self.linear1 = torch.nn.Linear(D_in, D_out)
         self.linear1.name = "linear1"
 
     def forward(self, x):
         """
-        In the forward function we accept a Tensor of input data and we must return
-        a Tensor of output data. We can use Modules defined in the constructor as
-        well as arbitrary operators on Tensors.
+        Simple forward step
         """
-        #h_relu = self.linear1(x).clamp(min=0)
-        #y_pred = self.linear2(h_relu)
-        #return y_pred, h_relu
         y_pred = self.linear1(x)
         print("linear1:", self.linear1)
         for param in self.linear1.parameters():
@@ -31,18 +23,18 @@ class TwoLayerNet(torch.nn.Module):
         #print("linear1.grad:", self.linear1.data)
         return y_pred
 
+# Values for the network size
 N, D_in, H, D_out = 4, 3, 4, 2
 #N, D_in, H, D_out = 4, 3, 10, 5
 
 # Create random Tensors to hold inputs and outputs
-#x = torch.zeros(N, D_in, requires_grad = True)
 x = torch.zeros(N, D_in)
 y = torch.ones(N, D_out)
 print("x.requires_grad")
 print(x.requires_grad)
 
 # Construct our model by instantiating the class defined above
-model = TwoLayerNet(D_in, H, D_out)
+model = OneLayerNet(D_in, H, D_out)
 print("model:", model)
 
 criterion = torch.nn.MSELoss(size_average=False)
