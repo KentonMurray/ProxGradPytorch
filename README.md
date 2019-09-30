@@ -1,5 +1,14 @@
 # ProxGradPytorch
-ProxGradPytorch is a pytorch implementation of many of the proximal gradiente algorithms from [Parikh and Boyd (2014)](https://web.stanford.edu/~boyd/papers/prox_algs.html). In particular, many of these algorithms are useful for Auto-Sizing Neural Networks [(Murray and Chiang 2015)](https://www.aclweb.org/anthology/D15-1107).
+ProxGradPytorch is a pytorch implementation of many of the proximal gradient algorithms from [Parikh and Boyd (2014)](https://web.stanford.edu/~boyd/papers/prox_algs.html). In particular, many of these algorithms are useful for Auto-Sizing Neural Networks [(Murray and Chiang 2015)](https://www.aclweb.org/anthology/D15-1107).
+
+If you use this toolkit, we would appreciate it if you could cite:
+
+    @inproceedings{murray19autosizing,
+        author={Murray, Kenton and Kinnison, Jeffery and Nguyen, Toan Q. and Scheirer, Walter and Chiang, David},
+        title={Auto-Sizing the Transformer Network: Improving Speed, Efficiency, and Performance for Low-Resource Machine Translation},
+        year=2019,
+         booktitle={Proceedings of the Third Workshop on Neural Generation and Translation},
+    }
 
 ## Installation
 A PyPI release is on the way, but for now, to build from source, simply clone this repository. Currently, there is a dependency on pytorch >=0.4.1 On Linux, it's easiest to add the repo to your shared library path:
