@@ -3,11 +3,11 @@ ProxGradPytorch is a pytorch implementation of many of the proximal gradient alg
 
 If you use this toolkit, we would appreciate it if you could cite:
 
-    @inproceedings{murray19autosizing,
+    @inproceedings{murray2019autosizing,
         author={Murray, Kenton and Kinnison, Jeffery and Nguyen, Toan Q. and Scheirer, Walter and Chiang, David},
         title={Auto-Sizing the Transformer Network: Improving Speed, Efficiency, and Performance for Low-Resource Machine Translation},
         year=2019,
-         booktitle={Proceedings of the Third Workshop on Neural Generation and Translation},
+        booktitle={Proceedings of the Third Workshop on Neural Generation and Translation},
     }
 
 ## Installation
@@ -37,7 +37,7 @@ optimizer.step()
 This is just a standard pytorch update. Second, you run the proximal gradient algorithm. Many of these algorithms have a closed form solution and do not rely on stored gradients. For instance, to apply L2,1 regularization to a tensor named model.linear1, you run the following code:
 
 ```
-pg.l21(model.linear1.weight, model.linear1.bias, reg=0.1)
+pg.l21(model.linear1.weight, model.linear1.bias, reg=0.005)
 ```
 
 This will apply a group regularizer over each row. Assuming that the row is the input to a non-linearity where f(0) = 0 (and is all of the inputs to a neuron), then this will auto-size that layer. There are many other regularizers implemented as well that are not just for auto-sizing (for instance L_infinity, L_2, etc.).
