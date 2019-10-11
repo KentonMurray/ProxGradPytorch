@@ -1,5 +1,5 @@
-# ProxGradPytorch
-ProxGradPytorch is a pytorch implementation of many of the proximal gradient algorithms from [Parikh and Boyd (2014)](https://web.stanford.edu/~boyd/papers/prox_algs.html). In particular, many of these algorithms are useful for Auto-Sizing Neural Networks [(Murray and Chiang 2015)](https://www.aclweb.org/anthology/D15-1107).
+# ProxGradPyTorch
+ProxGradPyTorch is a PyTorch implementation of many of the proximal gradient algorithms from [Parikh and Boyd (2014)](https://web.stanford.edu/~boyd/papers/prox_algs.html). In particular, many of these algorithms are useful for Auto-Sizing Neural Networks [(Murray and Chiang 2015)](https://www.aclweb.org/anthology/D15-1107).
 
 If you use this toolkit, we would appreciate it if you could cite:
 
