@@ -1,11 +1,11 @@
 from distutils.core import setup
 
 setup(
-    name='ProxGradPytorch',
+    name='proximal_gradient',
     version='0.1.0',
     author='Kenton Murray',
     author_email='kmurray4@nd.edu',
-    packages=['prox-grad-pytorch'],
+    packages=['proximal_gradient'],
     scripts=[],
     url='',#'http://pypi.python.org/pypi/TowelStuff/',
     license='LICENSE.txt',
