@@ -13,7 +13,7 @@ def l21(parameter, bias=None, reg=0.01, lr=0.1):
     else:
         w_and_b = parameter
     L21 = reg # lambda: regularization strength
-    Norm = (lr*L21/w_and_b.norm(2, dim=1))
+    Norm = (lr*L21/w_and_b.norm(2, dim=1)) # Key insight here: apply rowwise (by using dim 1)
     if Norm.is_cuda:
         ones = torch.ones(w_and_b.size(0), device=torch.device("cuda"))
     else:
@@ -75,8 +75,9 @@ def linf1(parameter, bias=None, reg=0.01, lr=0.1):
 
     oneN = 1.0/scale_indices
 
-
-    nonzero_ones = torch.clamp(nonzero * 1000000, max=1) #TODO: Hacky
+    # Algorithm described in paper, but these are all efficient GPU operation steps)
+    # First we subtract every value from the cell next to it
+    nonzero_ones = torch.clamp(nonzero * 1000000, max=1) #Hacky, but efficient
     shifted_ones = torch.cat((torch.ones(rows,1, device=torch.device(devicetype)),nonzero_ones[:,:(cols-1)]),1)
     over_one = -1*(nonzero_ones - shifted_ones)
     last_one = torch.cat((over_one,torch.zeros(rows,1, device=torch.device(devicetype))),1)[:,1:]
@@ -85,10 +86,12 @@ def linf1(parameter, bias=None, reg=0.01, lr=0.1):
     first_col_nonzero_ones = torch.cat((torch.ones(rows,1, device=torch.device(devicetype)),nonzero_ones[:,1:]),1) #Edge case for only first column
     tosub = first_col_nonzero_ones * subtracted + shift_max * oneN
 
-    nastyflipS = torch.flip(torch.flip(tosub,[0,1]),[0]) #TODO: Edge cases
+    # We flip the tensor so that we can get a cumulative sum for the value to subtract, then flip back
+    nastyflipS = torch.flip(torch.flip(tosub,[0,1]),[0])
     aggsubS = torch.cumsum(nastyflipS,1)
-    nastyflipagainS = torch.flip(torch.flip(aggsubS,[0,1]),[0]) #TODO: Edge cases
+    nastyflipagainS = torch.flip(torch.flip(aggsubS,[0,1]),[0])
 
+    # The proximal gradient step is equal to subtracting the sorted cumulative sum
     updated_weights = sorted_w_and_b - nastyflipagainS
     unsorted = torch.zeros(rows,cols, device=torch.device(devicetype)).scatter_(1,indices,updated_weights)
     final_w_and_b = torch.sign(w_and_b) * unsorted
@@ -153,9 +156,9 @@ def l1(parameter, bias=None, reg=0.01, lr=0.1):
         Norms_w = Norm*torch.ones(parameter.size(), device=torch.device("cuda"))
     else:
         Norms_w = Norm*torch.ones(parameter.size(), device=torch.device("cpu"))
-    pos = torch.min(Norms_w, Norm*torch.clamp(parameter, min=0))
-    neg = torch.min(Norms_w, -1.0*Norm*torch.clamp(parameter, max=0))
-    update_w = parameter - pos + neg
+    pos = torch.min(Norms_w, Norm*torch.clamp(parameter, min=0)) # get all positive values
+    neg = torch.min(Norms_w, -1.0*Norm*torch.clamp(parameter, max=0)) # get all negative values
+    update_w = parameter - pos + neg # l1 step is the magnitude of all positive and all negative
     parameter.data = update_w
 
     if bias is not None:
@@ -186,7 +189,6 @@ def logbarrier(parameter, bias=None, reg=0.01, lr=0.1):
     """Project onto logbarrier. Useful for minimization
     of f(x) when x >= b.
     F(A) = -log(det(A))"""
-    #TODO: Verify this is correct
     Norm = reg*lr
 
     # Update W
