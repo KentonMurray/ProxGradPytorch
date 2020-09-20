@@ -1,3 +1,4 @@
+import setuptools
 from distutils.core import setup
 
 setup(
@@ -7,11 +8,12 @@ setup(
     author_email='kmurray4@nd.edu',
     packages=['proximal_gradient'],
     scripts=[],
-    url='',#'http://pypi.python.org/pypi/TowelStuff/',
+    url='https://github.com/KentonMurray/ProxGradPytorch',
     license='LICENSE.txt',
     description='Proximal Gradient Methods for Pytorch',
-    long_description=open('README.md').read(),
+    #long_description=open('README.md').read(),
     install_requires=[
         "torch >= 0.4.0",
     ],
+    setup_requires=['wheel'],
 )

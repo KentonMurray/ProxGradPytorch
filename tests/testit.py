@@ -1,5 +1,5 @@
 import torch
-import proximalGradient as pg
+import proximal_gradient.proximalGradient as pg
 
 class OneLayerNet(torch.nn.Module):
     def __init__(self, D_in, H, D_out):

@@ -1,6 +1,6 @@
 import torch
 from torch.autograd import Variable
-import proximalGradient as pg
+import proximal_gradient.proximalGradient as pg
 
 class TwoLayerNet(torch.nn.Module):
     def __init__(self, D_in, H, D_out):

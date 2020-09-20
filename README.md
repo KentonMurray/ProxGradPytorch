@@ -11,7 +11,24 @@ If you use this toolkit, we would appreciate it if you could cite:
     }
 
 ## Installation
-A PyPI release is on the way, but for now, to build from source, simply clone this repository. Currently, there is a dependency on pytorch >=0.4.1 On Linux, it's easiest to add the repo to your shared library path:
+
+The only dependency is on pytorch >=0.4.1
+
+The simplest way to install is using PyPI. Simply type:
+
+```
+pip install proximal-gradient
+```
+
+In the headers for any file that you want to use ProxGradPytorch, add the following line:
+
+```
+import proximal_gradient.proximalGradient as pg
+```
+
+# From Source
+
+To build from source, simply clone this repository. Currently, there is a dependency on pytorch >=0.4.1 On Linux, it's easiest to add the repo to your shared library path:
 
 ```
 export LD_LIBRARY_PATH="[install_dir]/ProxGradPytorch/prox-grad-pytorch:$LD_LIBRARY_PATH"
